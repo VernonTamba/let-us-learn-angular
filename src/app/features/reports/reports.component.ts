@@ -270,11 +270,10 @@ import { MatDividerModule } from '@angular/material/divider';
                 [disabled]="reportForm.invalid || isGenerating()">
                 @if (isGenerating()) {
                   <mat-icon class="spin">sync</mat-icon>
-                  Generating...
                 } @else {
                   <mat-icon>description</mat-icon>
-                  Generate Report
                 }
+                {{ isGenerating() ? 'Generating...' : 'Generate Report' }}
               </button>
             </div>
 

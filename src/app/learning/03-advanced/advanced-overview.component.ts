@@ -145,7 +145,7 @@ const total = computed(() => subtotal() + tax());
                   <p>Depth (m): <strong>{{ depthMeters() }}</strong></p>
                   <p>Depth (ft): <strong>{{ depthFeet() | number:'1.1-1' }}</strong> (computed)</p>
                   <p>Is Deep Well: <strong>{{ isDeepWell() }}</strong> (computed)</p>
-                  <button mat-raised-button (click)="depthMeters.update(d => d + 100)">
+                  <button mat-raised-button (click)="depthMeters.set(depthMeters() + 100)">
                     Drill +100m
                   </button>
                 </div>
@@ -347,7 +347,7 @@ ngOnInit() {{ '{' }}
                     <h4>OnPush (ChangeDetectionStrategy.OnPush)</h4>
                     <pre><code>
 // Only checks when:
-// 1. @Input() reference changes (immutable!)
+// 1. &#64;Input() reference changes (immutable!)
 // 2. Event handler in this component fires
 // 3. Async pipe emits new value
 // 4. Signal value changes (Angular 17+)
@@ -456,7 +456,7 @@ export const appConfig: ApplicationConfig = {{ '{' }}
               </mat-card-header>
               <mat-card-content>
                 <pre class="code-block"><code>
-// @defer lazily loads component code (JavaScript) on demand
+// &#64;defer lazily loads component code (JavaScript) on demand
 // Perfect for heavy components that aren't immediately needed
 
 // ===== TRIGGER: on viewport (when scrolled into view) =====

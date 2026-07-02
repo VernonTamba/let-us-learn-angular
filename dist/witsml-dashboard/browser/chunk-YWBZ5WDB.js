@@ -1,0 +1,1 @@
+import"./chunk-4CLCTAJ7.js";var e=[{path:"",loadComponent:()=>import("./chunk-U63LAL5M.js").then(t=>t.WellListComponent),title:"Well List"},{path:":id",loadComponent:()=>import("./chunk-62JD7A74.js").then(t=>t.WellDetailComponent),title:"Well Detail"}];export{e as WELL_MONITORING_ROUTES};

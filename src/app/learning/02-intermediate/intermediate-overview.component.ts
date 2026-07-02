@@ -156,10 +156,10 @@ of('well-001', 'well-002', 'well-003').pipe(
                 <pre class="code-block"><code>
 // Sequential operations - order matters!
 this.actions$.pipe(
-  concatMap(action => {
+  concatMap(action => {{ '{' }}
     // Each action waits for previous to complete
     return this.api.executeAction(action);
-  })
+  {{ '}' }})
 ).subscribe();
 
 // Write sensor data in order (must maintain sequence)

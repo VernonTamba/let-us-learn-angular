@@ -274,7 +274,7 @@ export class WellStatusCardComponent {
                     </code></pre>
                   </div>
                   <div class="new-way">
-                    <h4>🟢 NEW: @if / @else</h4>
+                    <h4>🟢 NEW: &#64;if / &#64;else</h4>
                     <pre><code>
 &#64;if (isConnected()) {{ '{' }}
   &lt;div&gt;Connected!&lt;/div&gt;
@@ -323,7 +323,7 @@ trackByUid(index: number, well: any) {{ '{' }}
                     </code></pre>
                   </div>
                   <div class="new-way">
-                    <h4>🟢 NEW: @for with track (REQUIRED)</h4>
+                    <h4>🟢 NEW: &#64;for with track (REQUIRED)</h4>
                     <pre><code>
 &#64;for (well of wells(); track well.uid;
       let i = $index, first = $first,
@@ -370,7 +370,7 @@ trackByUid(index: number, well: any) {{ '{' }}
                     </code></pre>
                   </div>
                   <div class="new-way">
-                    <h4>🟢 NEW: @switch</h4>
+                    <h4>🟢 NEW: &#64;switch</h4>
                     <pre><code>
 &#64;switch (status()) {{ '{' }}
   &#64;case ('drilling') {{ '{' }}
@@ -423,7 +423,7 @@ trackByUid(index: number, well: any) {{ '{' }}
                   <div class="hook-arrow">↓</div>
                   <div class="hook-item">
                     <strong>ngOnChanges(changes)</strong>
-                    <span>Called when @Input() values change. Receives SimpleChanges object.</span>
+                    <span>Called when &#64;Input() values change. Receives SimpleChanges object.</span>
                   </div>
                   <div class="hook-arrow">↓</div>
                   <div class="hook-item highlight">
@@ -468,7 +468,7 @@ trackByUid(index: number, well: any) {{ '{' }}
                 <ul class="tips-list">
                   <li><strong>ngOnInit vs constructor:</strong> Constructor = DI setup. ngOnInit = initialization logic (inputs ready, services available)</li>
                   <li><strong>ngOnDestroy:</strong> ALWAYS unsubscribe from observables to prevent memory leaks</li>
-                  <li><strong>ngOnChanges:</strong> Only called for @Input() decorated properties, not for signal inputs</li>
+                  <li><strong>ngOnChanges:</strong> Only called for &#64;Input() decorated properties, not for signal inputs</li>
                   <li><strong>Signal equivalent:</strong> effect() replaces many lifecycle hook use cases</li>
                 </ul>
               </mat-card-content>
@@ -490,7 +490,7 @@ trackByUid(index: number, well: any) {{ '{' }}
               <mat-card-content>
                 <div class="comparison">
                   <div class="old-way">
-                    <h4>🔴 OLD: @Input() decorator</h4>
+                    <h4>🔴 OLD: &#64;Input() decorator</h4>
                     <pre><code>
 // Child:
 &#64;Input() wellName: string = '';
@@ -526,7 +526,7 @@ depth = input.required&lt;number&gt;();    // required!
               <mat-card-content>
                 <div class="comparison">
                   <div class="old-way">
-                    <h4>🔴 OLD: @Output() + EventEmitter</h4>
+                    <h4>🔴 OLD: &#64;Output() + EventEmitter</h4>
                     <pre><code>
 // Child:
 &#64;Output() wellSelected = new EventEmitter&lt;string&gt;();
