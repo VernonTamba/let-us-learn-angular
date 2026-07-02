@@ -1,0 +1,211 @@
+/**
+ * =============================================================================
+ * GLOBAL STYLES
+ * =============================================================================
+ *
+ * 📘 KONSEP: Global Styles vs Component Styles
+ *
+ * Angular memiliki View Encapsulation:
+ * - Emulated (default): Styles di-scope ke component via attribute selectors
+ * - None: Styles berlaku global
+ * - ShadowDom: Menggunakan native Shadow DOM
+ *
+ * File ini untuk styles yang benar-benar global.
+ * =============================================================================
+ */
+
+// ===== CSS Custom Properties (Variables) =====
+:root {
+  --primary-color: #1a237e;
+  --accent-color: #ff6f00;
+  --warn-color: #d32f2f;
+  --success-color: #2e7d32;
+  --background-color: #f5f5f5;
+  --card-background: #ffffff;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --border-color: #e0e0e0;
+
+  // Oil & Gas specific colors
+  --oil-dark: #1b1b1b;
+  --oil-orange: #ff6f00;
+  --gas-blue: #0277bd;
+  --well-green: #2e7d32;
+  --alert-red: #d32f2f;
+}
+
+// ===== Reset & Base =====
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Roboto', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-primary);
+}
+
+// ===== Typography =====
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+// ===== Utility Classes =====
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gap-8 { gap: 8px; }
+.gap-16 { gap: 16px; }
+.gap-24 { gap: 24px; }
+
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+
+.p-16 { padding: 16px; }
+.p-24 { padding: 24px; }
+
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+.w-full { width: 100%; }
+
+// ===== Card Styles =====
+.dashboard-card {
+  background: var(--card-background);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// ===== Grid Layout =====
+.grid-container {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+// ===== Status Indicators =====
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.status-drilling {
+    background: rgba(46, 125, 50, 0.1);
+    color: var(--well-green);
+  }
+
+  &.status-producing {
+    background: rgba(2, 119, 189, 0.1);
+    color: var(--gas-blue);
+  }
+
+  &.status-suspended {
+    background: rgba(255, 111, 0, 0.1);
+    color: var(--oil-orange);
+  }
+
+  &.status-abandoned {
+    background: rgba(211, 47, 47, 0.1);
+    color: var(--alert-red);
+  }
+}
+
+// ===== Responsive Breakpoints =====
+@media (max-width: 768px) {
+  .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1024px) {
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// ===== Animations =====
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+// ===== Scrollbar Custom =====
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
