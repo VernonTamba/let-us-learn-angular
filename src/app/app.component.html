@@ -1,0 +1,164 @@
+<!--
+  =============================================================================
+  APP.COMPONENT.HTML - Root Layout Template
+  =============================================================================
+
+  📘 KONSEP YANG DIGUNAKAN DI FILE INI:
+
+  1. PROPERTY BINDING: [attr.role]="...", [mode]="...", [opened]="..."
+     - Mengikat value dari component ke DOM property/attribute
+
+  2. EVENT BINDING: (click)="drawer.toggle()"
+     - Menangkap user event dan memanggil method
+
+  3. ASYNC PIPE: isHandset$ | async
+     - Unwrap Observable di template, auto-subscribe & unsubscribe
+
+  4. STRUCTURAL DIRECTIVE: *ngIf (old way, masih dipakai di sini)
+     - Conditional rendering berdasarkan expression
+
+  5. TEMPLATE REFERENCE VARIABLE: #drawer
+     - Referensi ke MatSidenav instance, dipakai untuk .toggle()
+
+  6. ROUTER DIRECTIVES: routerLink, routerLinkActive, router-outlet
+     - Navigation dan rendering child components
+
+  7. ATTRIBUTE BINDING: [attr.role]
+     - Binding ke HTML attribute (bukan DOM property)
+
+  8. CONTENT PROJECTION: <router-outlet />
+     - Angular akan render child route component di sini
+  =============================================================================
+-->
+
+<!-- ============================================================
+     LAYOUT: Sidenav Container (Material Design)
+     ============================================================ -->
+<mat-sidenav-container class="sidenav-container">
+
+  <!-- ============================================================
+       SIDEBAR NAVIGATION
+       ============================================================
+
+       📘 PROPERTY BINDING:
+       [attr.role] - Accessibility: 'dialog' di mobile, 'navigation' di desktop
+       [mode]      - 'over' (overlay di mobile) vs 'side' (push content di desktop)
+       [opened]    - Buka/tutup sidebar berdasarkan screen size
+
+       📘 ASYNC PIPE (| async):
+       - Otomatis subscribe ke Observable
+       - Otomatis unsubscribe saat component destroy
+       - Trigger change detection saat value baru emit
+       ============================================================ -->
+  <mat-sidenav #drawer class="sidenav"
+    [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+    [mode]="(isHandset$ | async) ? 'over' : 'side'"
+    [opened]="!(isHandset$ | async)">
+
+    <!-- Sidebar Header -->
+    <mat-toolbar class="sidenav-header">
+      <span>🛢️ WITSML Monitor</span>
+    </mat-toolbar>
+
+    <!-- Navigation List -->
+    <mat-nav-list>
+
+      <!--
+        📘 ROUTER DIRECTIVES:
+        - routerLink="/path"     → Navigate ke route
+        - routerLinkActive="class" → Tambah CSS class kalau route aktif
+
+        📘 MATERIAL DIRECTIVES:
+        - mat-list-item         → Material list item styling
+        - matListItemIcon       → Position icon di list item
+        - matListItemTitle      → Title text di list item
+      -->
+      <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>dashboard</mat-icon>
+        <span matListItemTitle>Dashboard</span>
+      </a>
+
+      <a mat-list-item routerLink="/wells" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>oil_barrel</mat-icon>
+        <span matListItemTitle>Well Monitoring</span>
+      </a>
+
+      <a mat-list-item routerLink="/streaming" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>stream</mat-icon>
+        <span matListItemTitle>Data Streaming</span>
+      </a>
+
+      <a mat-list-item routerLink="/reports" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>assessment</mat-icon>
+        <span matListItemTitle>Reports</span>
+      </a>
+
+      <mat-divider></mat-divider>
+
+      <!-- Learning Section -->
+      <a mat-list-item routerLink="/learning" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>school</mat-icon>
+        <span matListItemTitle>Learning Center</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <!-- ============================================================
+       MAIN CONTENT AREA
+       ============================================================ -->
+  <mat-sidenav-content>
+
+    <!--
+      📘 TOP TOOLBAR:
+      - color="primary"  → Property binding ke Material theme color
+      - (click)          → Event binding untuk toggle sidebar
+      - *ngIf            → Structural directive (show hamburger only on mobile)
+
+      🔴 OLD WAY: *ngIf="isHandset$ | async"
+      🟢 NEW WAY would be: @if (isHandset$ | async) { ... }
+      (kept old way here to show both styles exist in real projects)
+    -->
+    <mat-toolbar color="primary">
+      <!-- Hamburger menu - hanya tampil di mobile -->
+      <button mat-icon-button (click)="drawer.toggle()"
+        *ngIf="isHandset$ | async">
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <!-- App Title -->
+      <span>WITSML Well Data Dashboard</span>
+
+      <!-- Spacer (pushes buttons to right) -->
+      <span class="toolbar-spacer"></span>
+
+      <!--
+        📘 ACCESSIBILITY: aria-label
+        Penting untuk screen readers. Always provide aria-label
+        untuk icon buttons yang tidak punya visible text.
+      -->
+      <button mat-icon-button aria-label="Notifications">
+        <mat-icon>notifications</mat-icon>
+      </button>
+      <button mat-icon-button aria-label="Settings">
+        <mat-icon>settings</mat-icon>
+      </button>
+    </mat-toolbar>
+
+    <!--
+      📘 ROUTER OUTLET:
+      Ini adalah "placeholder" dimana Angular akan render
+      component berdasarkan current route.
+
+      Contoh:
+      - URL: /dashboard  → DashboardComponent di-render di sini
+      - URL: /wells      → WellListComponent di-render di sini
+      - URL: /streaming  → DataStreamingComponent di-render di sini
+
+      Self-closing tag (<router-outlet />) adalah valid di Angular 15+
+    -->
+    <main class="main-content">
+      <router-outlet />
+    </main>
+
+  </mat-sidenav-content>
+</mat-sidenav-container>

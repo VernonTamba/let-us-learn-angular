@@ -1,0 +1,249 @@
+<!--
+  =============================================================================
+  DATA-STREAMING.COMPONENT.HTML - Real-time Data Streaming
+  =============================================================================
+
+  📘 KONSEP YANG DIGUNAKAN DI FILE INI:
+
+  1. TWO-WAY BINDING: [(ngModel)]="selectedWell"
+     - Template-driven two-way binding untuk form controls sederhana
+     - Shorthand: [ngModel]="selectedWell" + (ngModelChange)="selectedWell = $event"
+
+  2. @defer - DEFERRABLE VIEWS:
+     - Lazy load component code berdasarkan trigger
+     - @placeholder: sebelum trigger terjadi
+     - @loading: saat sedang load
+     - on viewport: trigger saat visible di screen
+
+  3. SIGNALS: isStreamActive(), currentData(), formattedParams(), dataHistory()
+     - Signal-based reactive state
+
+  4. EVENT BINDING dengan $event: (change)="toggleStream($event.checked)"
+     - Access event object properties
+
+  5. CLASS BINDING: [class.active], [class.alert], [class.up], [class.down]
+     - Conditional CSS classes
+
+  6. PIPE: | number, | date:'HH:mm:ss'
+     - Format numbers dan dates
+
+  7. ARRAY OPERATIONS in template: dataHistory().slice(-10).reverse()
+     - Method chaining langsung di template (OK untuk simple operations)
+
+  8. PROPERTY BINDING with value: [value]="1000"
+     - Binding number value (bukan string) ke mat-option
+  =============================================================================
+-->
+
+<div class="streaming-container">
+  <header class="page-header">
+    <h1>
+      <mat-icon>stream</mat-icon>
+      Real-time Data Streaming
+    </h1>
+    <p class="subtitle">WITSML real-time data feed from wellsite sensors</p>
+  </header>
+
+  <!-- ============================================================
+       CONTROL PANEL
+       ============================================================
+
+       📘 [(ngModel)] - TWO-WAY BINDING (Template-Driven):
+       Digunakan di sini karena controls ini simple (no validation needed).
+       Untuk complex forms → gunakan Reactive Forms (lihat reports.component).
+
+       📘 [value]="1000" vs value="1000":
+       - [value]="1000" → number 1000
+       - value="1000"   → string "1000"
+       Penting bedakan karena === comparison akan gagal kalau type beda!
+       ============================================================ -->
+  <mat-card class="control-panel">
+    <mat-card-content>
+      <div class="controls">
+        <mat-form-field appearance="outline">
+          <mat-label>Select Well</mat-label>
+          <mat-select [(ngModel)]="selectedWell">
+            <mat-option value="well-001">Kalimantan Deep-1</mat-option>
+            <mat-option value="well-002">Java Sea Explorer-3</mat-option>
+            <mat-option value="well-004">Papua Deep Gas-2</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Update Rate</mat-label>
+          <mat-select [(ngModel)]="updateRate">
+            <!-- [value] binding number, bukan string -->
+            <mat-option [value]="1000">1 second</mat-option>
+            <mat-option [value]="2000">2 seconds</mat-option>
+            <mat-option [value]="5000">5 seconds</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!--
+          📘 MAT-SLIDE-TOGGLE:
+          [checked] = property binding (signal → element)
+          (change)  = event binding (element → handler)
+          $event.checked = access property dari MatSlideToggleChange event
+        -->
+        <mat-slide-toggle
+          [checked]="isStreamActive()"
+          (change)="toggleStream($event.checked)"
+          color="primary">
+          {{ isStreamActive() ? 'Streaming' : 'Stopped' }}
+        </mat-slide-toggle>
+
+        <div class="connection-info">
+          <span class="status-dot" [class.active]="isStreamActive()"></span>
+          <span>{{ dataPointCount() }} data points received</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- ============================================================
+       LIVE DATA DISPLAY
+       ============================================================ -->
+  @if (isStreamActive()) {
+    <section class="live-data-section">
+      <!-- Current Values -->
+      <mat-card class="current-values">
+        <mat-card-header>
+          <mat-card-title>Current Parameters</mat-card-title>
+          <span class="live-badge pulse">LIVE</span>
+        </mat-card-header>
+        <mat-card-content>
+          @if (currentData()) {
+            <div class="params-grid">
+              @for (param of formattedParams(); track param.key) {
+                <!--
+                  📘 MULTIPLE CLASS BINDINGS:
+                  [class.alert]="param.isAlert" → adds 'alert' class if true
+                  Bisa combine multiple [class.x] bindings pada satu element
+                -->
+                <div class="param-item" [class.alert]="param.isAlert">
+                  <span class="param-label">{{ param.label }}</span>
+                  <span class="param-value">{{ param.value | number:'1.1-1' }}</span>
+                  <span class="param-unit">{{ param.unit }}</span>
+                  @if (param.trend !== 0) {
+                    <mat-icon class="trend-icon"
+                      [class.up]="param.trend > 0"
+                      [class.down]="param.trend < 0">
+                      {{ param.trend > 0 ? 'trending_up' : 'trending_down' }}
+                    </mat-icon>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!--
+        ============================================================
+        📘 @defer - DEFERRABLE VIEWS (Angular 17+)
+        ============================================================
+
+        Lazy-load heavy components HANYA saat dibutuhkan.
+        JavaScript bundle untuk component di dalam @defer
+        TIDAK termasuk di initial bundle!
+
+        TRIGGER OPTIONS:
+        - on viewport    → saat element masuk visible area (scroll)
+        - on idle        → saat browser idle (requestIdleCallback)
+        - on timer(Xms)  → setelah X milliseconds
+        - on interaction → saat user click/focus/input
+        - on hover       → saat mouse hover
+        - when expr      → saat expression menjadi true
+
+        BLOCKS:
+        - @placeholder   → tampil sebelum trigger (default content)
+        - @loading       → tampil saat loading JS bundle
+        - @error         → tampil kalau load gagal
+
+        PREFETCH:
+        - prefetch on idle → load code early, render later
+        ============================================================
+      -->
+      @defer (on viewport) {
+        <!-- Heavy chart component loaded only when scrolled into view -->
+        <mat-card class="chart-section">
+          <mat-card-header>
+            <mat-card-title>Data History (Last {{ historySize() }} readings)</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-placeholder">
+              <p>📊 Chart visualization would render here</p>
+              <p class="chart-info">
+                In production, this would be a real-time updating Chart.js line graph
+                showing parameter trends over time.
+              </p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      } @placeholder {
+        <!-- Shown BEFORE defer trigger fires -->
+        <mat-card class="chart-section">
+          <mat-card-content>
+            <p class="placeholder-text">
+              <mat-icon>visibility</mat-icon>
+              Scroll down to load chart...
+            </p>
+          </mat-card-content>
+        </mat-card>
+      } @loading (minimum 500ms) {
+        <!-- Shown WHILE loading (minimum display time prevents flicker) -->
+        <app-loading-spinner message="Loading chart component..." />
+      }
+    </section>
+  } @else {
+    <div class="inactive-state">
+      <mat-icon>cloud_off</mat-icon>
+      <h3>Stream Inactive</h3>
+      <p>Toggle the stream switch to start receiving real-time data</p>
+    </div>
+  }
+
+  <!-- ============================================================
+       DATA LOG (scrollable list)
+       ============================================================
+
+       📘 ARRAY METHOD in template: dataHistory().slice(-10).reverse()
+       - slice(-10) = ambil 10 terakhir
+       - reverse()  = urutkan terbaru di atas
+
+       ⚠️ CATATAN PERFORMANCE:
+       Ini OK untuk demo, tapi di production sebaiknya gunakan
+       computed() signal agar tidak re-create array setiap CD cycle.
+       ============================================================ -->
+  @if (dataHistory().length > 0) {
+    <mat-card class="data-log">
+      <mat-card-header>
+        <mat-card-title>Recent Data Log</mat-card-title>
+        <button mat-icon-button (click)="clearHistory()">
+          <mat-icon>delete_sweep</mat-icon>
+        </button>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="log-entries">
+          @for (entry of dataHistory().slice(-10).reverse(); track entry.timestamp) {
+            <div class="log-entry">
+              <span class="log-time">
+                <!--
+                  📘 DATE PIPE with format:
+                  | date:'HH:mm:ss' → "14:30:55"
+                  Format options: 'short', 'medium', 'long', 'full', or custom
+                -->
+                {{ entry.timestamp | date:'HH:mm:ss' }}
+              </span>
+              <span class="log-data">
+                Depth: {{ entry.data.bitDepth | number:'1.1-1' }}m |
+                ROP: {{ entry.data.rateOfPenetration | number:'1.1-1' }}ft/hr |
+                WOB: {{ entry.data.weightOnBit | number:'1.1-1' }}klbs
+              </span>
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

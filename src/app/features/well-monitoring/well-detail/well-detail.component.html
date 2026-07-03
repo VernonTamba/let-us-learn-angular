@@ -1,0 +1,192 @@
+<!--
+  =============================================================================
+  WELL-DETAIL.COMPONENT.HTML - Well Detail View
+  =============================================================================
+
+  📘 KONSEP YANG DIGUNAKAN DI FILE INI:
+
+  1. SIGNAL READING: well(), drillingData(), isStreaming()
+     - Signals dibaca sebagai function calls di template
+
+  2. NON-NULL ASSERTION di template: well()!.name
+     - Dipakai karena @if (well()) sudah confirm non-null
+     - TypeScript masih perlu ! karena signal return type masih nullable
+
+  3. @if / @else: Conditional rendering
+     - Nested @if untuk multiple conditions
+     - @if (!isStreaming()) ... @else ... untuk toggle states
+
+  4. CLASS BINDING: [class.active]="isStreaming()"
+     - Conditionally add/remove CSS class
+
+  5. EVENT BINDING: (click)="startStreaming()", (click)="stopStreaming()"
+     - Handle button clicks
+
+  6. PIPES: | number:'1.1-1', | number:'1.0-0', | titlecase, | timeAgo
+     - Format numbers, text, dan dates
+
+  7. routerLink="/wells": Static navigation back
+     - String literal route navigation
+
+  8. mat-tab-group: Tabbed interface
+     - Material Design tab component
+
+  9. TERNARY IN INTERPOLATION: {{ isStreaming() ? 'LIVE' : 'OFFLINE' }}
+     - Inline conditional text
+  =============================================================================
+-->
+
+<div class="well-detail-container">
+  <!-- Back Button -->
+  <button mat-button routerLink="/wells" class="back-btn">
+    <mat-icon>arrow_back</mat-icon>
+    Back to Wells
+  </button>
+
+  <!--
+    📘 @if dengan SIGNAL:
+    well() adalah signal<WellSummary | null>
+    @if (well()) → render block hanya kalau well tidak null
+  -->
+  @if (well()) {
+    <!-- Well Header -->
+    <header class="well-header">
+      <div class="header-info">
+        <!--
+          📘 NON-NULL ASSERTION: well()!.name
+          Di dalam @if (well()), kita tahu well() pasti bukan null.
+          Tapi TypeScript compiler masih perlu ! untuk confirm.
+        -->
+        <h1>{{ well()!.name }}</h1>
+        <span class="status-badge status-{{ well()!.status }}">
+          {{ well()!.status }}
+        </span>
+      </div>
+      <p class="field-info">
+        <mat-icon>place</mat-icon>
+        {{ well()!.field }}
+      </p>
+    </header>
+
+    <!-- Tabs -->
+    <mat-tab-group>
+      <!-- Overview Tab -->
+      <mat-tab label="Overview">
+        <div class="tab-content">
+          <div class="overview-grid">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Well Information</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <mat-list>
+                  <mat-list-item>
+                    <span matListItemTitle>Current Depth</span>
+                    <span matListItemLine>
+                      {{ well()!.currentDepth | number:'1.0-0' }} {{ well()!.depthUnit }}
+                    </span>
+                  </mat-list-item>
+                  <mat-list-item>
+                    <span matListItemTitle>Well Type</span>
+                    <span matListItemLine>{{ well()!.type | titlecase }}</span>
+                  </mat-list-item>
+                  <mat-list-item>
+                    <span matListItemTitle>Last Updated</span>
+                    <span matListItemLine>{{ well()!.lastUpdated | timeAgo }}</span>
+                  </mat-list-item>
+                </mat-list>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Real-time Data Card -->
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Real-time Data</mat-card-title>
+                <!--
+                  📘 CLASS BINDING: [class.active]="expression"
+                  Menambah class 'active' ke element secara conditional.
+                  Kalau isStreaming() true → class="live-indicator active"
+                  Kalau false → class="live-indicator"
+                -->
+                <span class="live-indicator" [class.active]="isStreaming()">
+                  <!--
+                    📘 TERNARY in INTERPOLATION:
+                    {{ condition ? 'valueA' : 'valueB' }}
+                  -->
+                  {{ isStreaming() ? 'LIVE' : 'OFFLINE' }}
+                </span>
+              </mat-card-header>
+              <mat-card-content>
+                @if (drillingData()) {
+                  <div class="realtime-metrics">
+                    <div class="metric">
+                      <span class="metric-label">ROP</span>
+                      <span class="metric-value">
+                        {{ drillingData()!.rateOfPenetration | number:'1.1-1' }}
+                      </span>
+                      <span class="metric-unit">ft/hr</span>
+                    </div>
+                    <div class="metric">
+                      <span class="metric-label">WOB</span>
+                      <span class="metric-value">
+                        {{ drillingData()!.weightOnBit | number:'1.1-1' }}
+                      </span>
+                      <span class="metric-unit">klbs</span>
+                    </div>
+                    <div class="metric">
+                      <span class="metric-label">RPM</span>
+                      <span class="metric-value">
+                        {{ drillingData()!.rotaryRPM | number:'1.0-0' }}
+                      </span>
+                      <span class="metric-unit">rpm</span>
+                    </div>
+                  </div>
+                } @else {
+                  <p class="no-data">No real-time data available</p>
+                }
+              </mat-card-content>
+              <mat-card-actions>
+                <!--
+                  📘 @if / @else untuk Toggle UI:
+                  Show different button based on streaming state
+                -->
+                @if (!isStreaming()) {
+                  <button mat-button color="primary" (click)="startStreaming()">
+                    <mat-icon>play_arrow</mat-icon> Start Stream
+                  </button>
+                } @else {
+                  <button mat-button color="warn" (click)="stopStreaming()">
+                    <mat-icon>stop</mat-icon> Stop Stream
+                  </button>
+                }
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Logs Tab -->
+      <mat-tab label="Logs">
+        <div class="tab-content">
+          <p>Log data visualization would go here (depth-based & time-based logs)</p>
+        </div>
+      </mat-tab>
+
+      <!-- Trajectory Tab -->
+      <mat-tab label="Trajectory">
+        <div class="tab-content">
+          <p>3D trajectory plot would go here (TVD vs Northing vs Easting)</p>
+        </div>
+      </mat-tab>
+
+      <!-- Alarms Tab -->
+      <mat-tab label="Alarms">
+        <div class="tab-content">
+          <p>Active and historical alarms for this well</p>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  } @else {
+    <app-loading-spinner [show]="true" message="Loading well details..." />
+  }
+</div>

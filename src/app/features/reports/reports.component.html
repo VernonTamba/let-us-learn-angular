@@ -1,0 +1,301 @@
+<!--
+  =============================================================================
+  REPORTS.COMPONENT.HTML - Report Generator (Reactive Forms Demo)
+  =============================================================================
+
+  📘 KONSEP YANG DIGUNAKAN DI FILE INI:
+
+  1. REACTIVE FORMS:
+     - [formGroup]="reportForm"     → Bind form ke FormGroup
+     - formControlName="title"      → Bind input ke FormControl
+     - formArrayName="parameters"   → Bind section ke FormArray
+     - [formGroupName]="i"          → Dynamic FormGroup in array (by index)
+     - formGroupName="options"      → Nested FormGroup
+
+  2. FORM EVENTS:
+     - (ngSubmit)="onSubmit()"      → Handle form submission
+     - Type safety via FormBuilder
+
+  3. FORM VALIDATION:
+     - reportForm.get('title')?.hasError('required')
+     - reportForm.get('title')?.touched
+     - reportForm.hasError('dateRange') → Cross-field validator
+     - reportForm.invalid → Check overall form validity
+     - [disabled]="reportForm.invalid || isGenerating()"
+
+  4. FORM ARRAY (Dynamic Fields):
+     - parametersArray.controls → Iterate FormArray items
+     - @for with track $index → Built-in index variable
+     - let i = $index → Assign index to variable for use
+
+  5. MATERIAL DATEPICKER:
+     - [matDatepicker]="startPicker" → Connect input to datepicker
+     - #startPicker → Template reference variable for datepicker
+
+  6. ATTRIBUTE BINDING: [attr.aria-label]="'text'"
+     - Bind to HTML attribute (not DOM property)
+     - Used for accessibility
+
+  7. PIPE: | json
+     - Convert object to JSON string for debug display
+
+  8. @if inside form:
+     - Conditional error messages
+     - Conditional button content (loading state)
+  =============================================================================
+-->
+
+<div class="reports-container">
+  <header class="page-header">
+    <h1>
+      <mat-icon>assessment</mat-icon>
+      Reports & Analytics
+    </h1>
+    <p class="subtitle">Generate well performance and operational reports</p>
+  </header>
+
+  <!-- Report Generator Form -->
+  <mat-card class="report-form-card">
+    <mat-card-header>
+      <mat-card-title>Generate Report</mat-card-title>
+      <mat-card-subtitle>Configure report parameters</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <!--
+        📘 REACTIVE FORM BINDING:
+        [formGroup]="reportForm" → connects this <form> to the FormGroup
+        (ngSubmit)="onSubmit()" → called when form is submitted (enter or button click)
+      -->
+      <form [formGroup]="reportForm" (ngSubmit)="onSubmit()">
+
+        <!-- ===== SECTION 1: Basic Info ===== -->
+        <section class="form-section">
+          <h3>Report Configuration</h3>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="flex-1">
+              <mat-label>Report Title</mat-label>
+              <!--
+                📘 formControlName="title"
+                Connects this input to reportForm.get('title') FormControl.
+                Validators: required, minLength(3)
+              -->
+              <input matInput formControlName="title" placeholder="e.g., Daily Drilling Report">
+
+              <!--
+                📘 FORM VALIDATION DISPLAY:
+                reportForm.get('title')?.hasError('required') → check specific error
+                reportForm.get('title')?.touched → only show after user interacted
+                Combine with @if for conditional error messages
+              -->
+              @if (reportForm.get('title')?.hasError('required') &&
+                   reportForm.get('title')?.touched) {
+                <mat-error>Title is required</mat-error>
+              }
+              @if (reportForm.get('title')?.hasError('minlength')) {
+                <mat-error>Minimum 3 characters</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="flex-1">
+              <mat-label>Report Type</mat-label>
+              <mat-select formControlName="type">
+                <mat-option value="daily_drilling">Daily Drilling Report</mat-option>
+                <mat-option value="well_summary">Well Summary</mat-option>
+                <mat-option value="production">Production Report</mat-option>
+                <mat-option value="safety">Safety & HSE Report</mat-option>
+                <mat-option value="mud_log">Mud Log Report</mat-option>
+              </mat-select>
+              @if (reportForm.get('type')?.hasError('required') &&
+                   reportForm.get('type')?.touched) {
+                <mat-error>Please select a report type</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <!--
+              📘 MATERIAL DATEPICKER:
+              - [matDatepicker]="startPicker" → connect input to the datepicker popup
+              - #startPicker → template reference variable (gives access to datepicker API)
+              - matSuffix → positions toggle icon at end of form field
+              - [for]="startPicker" → tells toggle which datepicker to control
+            -->
+            <mat-form-field appearance="outline" class="flex-1">
+              <mat-label>Start Date</mat-label>
+              <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+              <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+              <mat-datepicker #startPicker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="flex-1">
+              <mat-label>End Date</mat-label>
+              <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+              <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+              <mat-datepicker #endPicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+
+          <!--
+            📘 CROSS-FIELD VALIDATION:
+            reportForm.hasError('dateRange') → error on the FormGroup itself (not individual control)
+            This validator checks: endDate > startDate
+            Defined in component: { validators: [this.dateRangeValidator] }
+          -->
+          @if (reportForm.hasError('dateRange')) {
+            <mat-error class="form-error">
+              End date must be after start date
+            </mat-error>
+          }
+        </section>
+
+        <mat-divider></mat-divider>
+
+        <!-- ===== SECTION 2: Well Selection ===== -->
+        <section class="form-section">
+          <h3>Well Selection</h3>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Select Wells</mat-label>
+            <mat-select formControlName="wells" multiple>
+              <mat-option value="well-001">Kalimantan Deep-1</mat-option>
+              <mat-option value="well-002">Java Sea Explorer-3</mat-option>
+              <mat-option value="well-003">Sumatra Light-7</mat-option>
+              <mat-option value="well-004">Papua Deep Gas-2</mat-option>
+              <mat-option value="well-005">Natuna Injection-1</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </section>
+
+        <mat-divider></mat-divider>
+
+        <!-- ===== SECTION 3: Dynamic FormArray ===== -->
+        <!--
+          📘 FORM ARRAY:
+          FormArray = dynamic list of FormGroups/FormControls
+          User bisa add/remove fields secara dinamis.
+
+          formArrayName="parameters" → connects to this.reportForm.get('parameters') FormArray
+          [formGroupName]="i" → each item in array is a FormGroup, accessed by index
+          track $index → @for built-in index variable (replaces let i = index in *ngFor)
+        -->
+        <section class="form-section">
+          <div class="section-header">
+            <h3>Parameters to Include</h3>
+            <button mat-mini-fab color="primary" type="button"
+              (click)="addParameter()"
+              [attr.aria-label]="'Add parameter'">
+              <mat-icon>add</mat-icon>
+            </button>
+          </div>
+
+          <div formArrayName="parameters">
+            @for (param of parametersArray.controls; track $index; let i = $index) {
+              <div class="parameter-row" [formGroupName]="i">
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>Parameter Name</mat-label>
+                  <mat-select formControlName="name">
+                    <mat-option value="bit_depth">Bit Depth</mat-option>
+                    <mat-option value="rop">Rate of Penetration</mat-option>
+                    <mat-option value="wob">Weight on Bit</mat-option>
+                    <mat-option value="rpm">Rotary RPM</mat-option>
+                    <mat-option value="torque">Torque</mat-option>
+                    <mat-option value="pump_pressure">Pump Pressure</mat-option>
+                    <mat-option value="mud_weight">Mud Weight</mat-option>
+                    <mat-option value="temperature">Temperature</mat-option>
+                    <mat-option value="gas_total">Total Gas</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Unit</mat-label>
+                  <mat-select formControlName="unit">
+                    <mat-option value="m">Meters</mat-option>
+                    <mat-option value="ft">Feet</mat-option>
+                    <mat-option value="psi">PSI</mat-option>
+                    <mat-option value="bar">Bar</mat-option>
+                    <mat-option value="rpm">RPM</mat-option>
+                    <mat-option value="ppg">PPG</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-checkbox formControlName="includeChart">Chart</mat-checkbox>
+
+                <button mat-icon-button color="warn" type="button"
+                  (click)="removeParameter(i)"
+                  [attr.aria-label]="'Remove parameter'">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+
+          @if (parametersArray.length === 0) {
+            <p class="hint-text">Click + to add parameters to the report</p>
+          }
+        </section>
+
+        <mat-divider></mat-divider>
+
+        <!-- ===== SECTION 4: Options (Nested FormGroup) ===== -->
+        <!--
+          📘 NESTED FORMGROUP:
+          formGroupName="options" → binds to reportForm.get('options') sub-group
+          Controls inside use formControlName relative to this group
+        -->
+        <section class="form-section">
+          <h3>Options</h3>
+          <div formGroupName="options" class="options-row">
+            <mat-checkbox formControlName="includeCharts">Include Charts</mat-checkbox>
+            <mat-checkbox formControlName="includeSummary">Include Summary</mat-checkbox>
+            <mat-checkbox formControlName="includeRawData">Include Raw Data</mat-checkbox>
+            <mat-checkbox formControlName="exportPdf">Export as PDF</mat-checkbox>
+          </div>
+        </section>
+
+        <!-- ===== FORM ACTIONS ===== -->
+        <div class="form-actions">
+          <button mat-button type="button" (click)="resetForm()">Reset</button>
+          <!--
+            📘 [disabled] BINDING:
+            Disabled when form is invalid OR when generating report.
+            Combines form state check with signal check.
+          -->
+          <button mat-raised-button color="primary" type="submit"
+            [disabled]="reportForm.invalid || isGenerating()">
+            @if (isGenerating()) {
+              <mat-icon class="spin">sync</mat-icon>
+              Generating...
+            } @else {
+              <mat-icon>description</mat-icon>
+              Generate Report
+            }
+          </button>
+        </div>
+
+        <!-- ===== DEBUG SECTION (for learning) ===== -->
+        <!--
+          📘 FORM STATE ACCESS di template:
+          - reportForm.valid   → boolean (all validators pass?)
+          - reportForm.dirty   → boolean (user modified any field?)
+          - reportForm.touched → boolean (user interacted with any field?)
+          - reportForm.value   → object (current form value)
+          - reportForm.errors  → object | null (form-level errors)
+
+          📘 PIPE: | json
+          Converts JavaScript object to formatted JSON string.
+          Useful for debugging.
+        -->
+        <details class="debug-section">
+          <summary>📘 Form Debug Info (for learning)</summary>
+          <pre class="form-debug">
+Form Valid: {{ reportForm.valid }}
+Form Dirty: {{ reportForm.dirty }}
+Form Touched: {{ reportForm.touched }}
+Form Value: {{ reportForm.value | json }}
+Form Errors: {{ reportForm.errors | json }}
+          </pre>
+        </details>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

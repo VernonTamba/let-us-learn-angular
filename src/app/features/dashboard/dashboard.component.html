@@ -1,0 +1,304 @@
+<!--
+  =============================================================================
+  DASHBOARD.COMPONENT.HTML - Main Dashboard Template
+  =============================================================================
+
+  📘 KONSEP YANG DIGUNAKAN DI FILE INI:
+
+  1. NEW CONTROL FLOW (@if, @for, @switch, @empty, @case, @default)
+     - Pengganti *ngIf, *ngFor, [ngSwitch] di Angular 17+
+
+  2. SIGNALS IN TEMPLATE: wellService.isLoading(), wells(), statusCards()
+     - Signal dibaca dengan memanggil sebagai function di template
+
+  3. INTERPOLATION: {{ card.title }}, {{ well.name }}
+     - Display dynamic values sebagai text
+
+  4. PROPERTY BINDING: [show], [overlay], [style.border-left-color], [routerLink]
+     - Bind component/DOM properties ke expressions
+
+  5. EVENT BINDING: (click)="reconnect()", (click)="connectStream()"
+     - Handle user interactions
+
+  6. PIPES: | number:'1.1-1', | number:'1.0-0', | timeAgo
+     - Transform data langsung di template
+
+  7. STYLE BINDING: [style.color]="card.color"
+     - Dynamic inline styles
+
+  8. CLASS BINDING (string interpolation): class="status-badge status-{{ well.status }}"
+     - Dynamic CSS class names
+  =============================================================================
+-->
+
+<!-- ============================================================
+     LOADING STATE
+     ============================================================
+
+     📘 COMPONENT USAGE:
+     <app-loading-spinner> adalah custom shared component.
+
+     📘 PROPERTY BINDING:
+     [show]="wellService.isLoading()" - SIGNAL di template!
+     Signal dibaca dengan () → memanggil getter
+     Template automatically re-renders saat signal berubah.
+
+     📘 SELF-CLOSING TAG:
+     <component /> valid di Angular 15+, sama seperti <component></component>
+     ============================================================ -->
+<app-loading-spinner
+  [show]="wellService.isLoading()"
+  message="Loading well data..."
+  [overlay]="true" />
+
+
+<!-- ============================================================
+     STATUS CARDS ROW
+     ============================================================ -->
+<section class="status-cards">
+
+  <!--
+    📘 NEW CONTROL FLOW: @for
+    ============================================================
+
+    🔴 OLD WAY:
+    <mat-card *ngFor="let card of statusCards(); trackBy: trackByStatus">
+      ...
+    </mat-card>
+
+    🟢 NEW WAY:
+    @for (card of statusCards(); track card.status) {
+      <mat-card>...</mat-card>
+    } @empty {
+      <p>No data</p>
+    }
+
+    PERBEDAAN:
+    - 'track' expression WAJIB di @for (compile error tanpa track)
+    - @empty block tersedia untuk handle array kosong
+    - Implicit variables: $index, $first, $last, $even, $odd, $count
+    - Performance: Angular reuses DOM nodes berdasarkan track value
+  -->
+  @for (card of statusCards(); track card.status) {
+    <mat-card class="status-card" [style.border-left-color]="card.color">
+      <mat-card-content>
+        <div class="card-content">
+          <div class="card-info">
+            <!-- 📘 INTERPOLATION: {{ expression }} -->
+            <span class="card-title">{{ card.title }}</span>
+            <span class="card-count">{{ card.count }}</span>
+          </div>
+          <!-- 📘 STYLE BINDING: [style.color]="expression" -->
+          <mat-icon [style.color]="card.color">{{ card.icon }}</mat-icon>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  } @empty {
+    <!--
+      📘 @empty BLOCK:
+      Ditampilkan ketika array yang di-iterate kosong.
+      Tidak ada equivalent di *ngFor (harus manual *ngIf check)
+    -->
+    <p class="no-data">No well data available</p>
+  }
+</section>
+
+
+<!-- ============================================================
+     REAL-TIME METRICS SECTION
+     ============================================================
+
+     📘 NEW CONTROL FLOW: @if
+     ============================================================
+
+     🔴 OLD WAY:
+     <section *ngIf="latestDrillingData()">...</section>
+
+     🟢 NEW WAY:
+     @if (latestDrillingData()) { <section>...</section> }
+
+     KEUNTUNGAN:
+     - Lebih readable (terutama dengan @else if / @else)
+     - Better type narrowing di dalam block
+     - Tidak perlu ng-template untuk else case
+     ============================================================ -->
+@if (latestDrillingData()) {
+  <section class="realtime-section">
+    <h2>
+      <mat-icon>stream</mat-icon>
+      Real-time Drilling Parameters
+      <span class="live-badge pulse">LIVE</span>
+    </h2>
+
+    <div class="metrics-grid">
+      <!--
+        📘 NEW CONTROL FLOW: @switch
+        ============================================================
+
+        🔴 OLD WAY:
+        <div [ngSwitch]="wsService.connectionStatus()">
+          <div *ngSwitchCase="'connected'">...</div>
+          <div *ngSwitchCase="'reconnecting'">...</div>
+          <div *ngSwitchDefault>...</div>
+        </div>
+
+        🟢 NEW WAY:
+        @switch (expression) {
+          @case (value1) { ... }
+          @case (value2) { ... }
+          @default { ... }
+        }
+
+        KEUNTUNGAN:
+        - Lebih clean syntax
+        - No need wrapper element ([ngSwitch] harus di parent element)
+        - Type-safe case matching
+      -->
+      @switch (wsService.connectionStatus()) {
+        @case ('connected') {
+          <!-- Real-time metrics cards -->
+          @for (metric of drillingMetrics(); track metric.label) {
+            <div class="metric-card">
+              <span class="metric-label">{{ metric.label }}</span>
+              <!--
+                📘 PIPE: | number:'1.1-1'
+                Format: 'minIntDigits.minFracDigits-maxFracDigits'
+                '1.1-1' = min 1 integer, 1-1 decimal places
+              -->
+              <span class="metric-value">{{ metric.value | number:'1.1-1' }}</span>
+              <span class="metric-unit">{{ metric.unit }}</span>
+            </div>
+          }
+        }
+
+        @case ('reconnecting') {
+          <div class="connection-status">
+            <mat-icon class="pulse">sync</mat-icon>
+            <span>Reconnecting to data stream...</span>
+          </div>
+        }
+
+        @case ('error') {
+          <div class="connection-status error">
+            <mat-icon>error</mat-icon>
+            <span>Connection lost. Retrying...</span>
+            <!-- 📘 EVENT BINDING: (click)="method()" -->
+            <button mat-stroked-button (click)="reconnect()">
+              Retry Now
+            </button>
+          </div>
+        }
+
+        @default {
+          <div class="connection-status">
+            <mat-icon>cloud_off</mat-icon>
+            <span>Not connected to data stream</span>
+            <button mat-raised-button color="primary" (click)="connectStream()">
+              Connect
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </section>
+}
+
+
+<!-- ============================================================
+     WELLS LIST SECTION
+     ============================================================ -->
+<section class="wells-section">
+  <div class="section-header">
+    <h2>
+      <mat-icon>oil_barrel</mat-icon>
+      Active Wells
+    </h2>
+    <!--
+      📘 routerLink DIRECTIVE:
+      - routerLink="/wells" → Navigate ke /wells route
+      - Bisa juga property binding: [routerLink]="['/wells']"
+    -->
+    <button mat-stroked-button color="primary" routerLink="/wells">
+      View All
+    </button>
+  </div>
+
+  <!--
+    📘 @if / @else PATTERN:
+    Conditional rendering dengan else block.
+    Lebih bersih dari *ngIf...else yang butuh ng-template.
+  -->
+  @if (wells().length > 0) {
+    <div class="wells-grid">
+      @for (well of wells(); track well.uid) {
+        <!--
+          📘 PROPERTY BINDING dengan Array:
+          [routerLink]="['/wells', well.uid]"
+          → Navigate ke /wells/well-001 (dynamic route parameter)
+        -->
+        <mat-card class="well-card" [routerLink]="['/wells', well.uid]">
+          <mat-card-header>
+            <!--
+              📘 TERNARY di INTERPOLATION:
+              {{ condition ? 'value1' : 'value2' }}
+              Bisa digunakan untuk simple conditional text/values
+            -->
+            <mat-icon mat-card-avatar>
+              {{ well.status === 'drilling' ? 'construction' : 'check_circle' }}
+            </mat-icon>
+            <mat-card-title>{{ well.name }}</mat-card-title>
+            <mat-card-subtitle>{{ well.field }}</mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="well-details">
+              <div class="detail-row">
+                <span class="label">Depth:</span>
+                <span class="value">
+                  <!--
+                    📘 PIPE: | number:'1.0-0'
+                    '1.0-0' = min 1 integer digit, 0 decimal places
+                    3500.7 → "3,501"
+                  -->
+                  {{ well.currentDepth | number:'1.0-0' }} {{ well.depthUnit }}
+                </span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Status:</span>
+                <!--
+                  📘 DYNAMIC CLASS via String Interpolation:
+                  class="status-badge status-{{ well.status }}"
+                  → Generates: class="status-badge status-drilling"
+
+                  Alternative (property binding):
+                  [class]="'status-badge status-' + well.status"
+                  [ngClass]="{'status-drilling': well.status === 'drilling'}"
+                -->
+                <span class="status-badge status-{{ well.status }}">
+                  {{ well.status }}
+                </span>
+              </div>
+              <div class="detail-row">
+                <span class="label">Updated:</span>
+                <span class="value">
+                  <!--
+                    📘 CUSTOM PIPE: | timeAgo
+                    Transform Date ke relative time string ("5m ago")
+                    Defined di: shared/pipes/time-ago.pipe.ts
+                  -->
+                  {{ well.lastUpdated | timeAgo }}
+                </span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  } @else {
+    <!-- Empty state when no wells -->
+    <div class="empty-state">
+      <mat-icon>info</mat-icon>
+      <p>No active wells found. Start by adding a new well.</p>
+    </div>
+  }
+</section>

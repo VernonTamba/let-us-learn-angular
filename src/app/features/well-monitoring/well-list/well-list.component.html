@@ -1,0 +1,212 @@
+<!--
+  =============================================================================
+  WELL-LIST.COMPONENT.HTML - Well List with Filtering
+  =============================================================================
+
+  📘 KONSEP YANG DIGUNAKAN DI FILE INI:
+
+  1. REACTIVE FORMS: [formGroup], formControlName
+     - Binding form ke FormGroup yang didefinisikan di TypeScript
+     - formControlName menghubungkan input ke FormControl tertentu
+
+  2. MATERIAL FORM FIELDS: mat-form-field, matInput, mat-select, mat-option
+     - Angular Material form components untuk consistent UI
+
+  3. SIGNALS IN TEMPLATE: filteredWells(), hasActiveFilters(), wellService.isLoading()
+     - Signal values dipanggil sebagai function
+
+  4. NESTED @if: Multiple conditional layers
+     - @if bisa nested untuk complex conditional rendering
+
+  5. RELATIVE routerLink: [routerLink]="[well.uid]"
+     - Relative navigation (relative to current route /wells)
+     - /wells + well.uid → /wells/well-001
+
+  6. PIPES: | titlecase, | number, | timeAgo
+     - Transform data display tanpa mengubah source data
+  =============================================================================
+-->
+
+<div class="well-list-container">
+  <!-- Page Header -->
+  <header class="page-header">
+    <h1>Well Monitoring</h1>
+    <p class="subtitle">Monitor all active wells in real-time</p>
+  </header>
+
+  <!-- ============================================================
+       FILTERS SECTION - Reactive Forms Demo
+       ============================================================
+
+       📘 REACTIVE FORMS:
+       [formGroup]="filterForm"
+       - Menghubungkan <form> ke FormGroup instance di component
+       - FormGroup berisi FormControls (search, status, type)
+
+       formControlName="search"
+       - Menghubungkan input element ke specific FormControl
+       - Two-way sync: user types → FormControl.value updates
+       - FormControl.valueChanges observable emits new value
+
+       📘 PERBEDAAN DENGAN TEMPLATE-DRIVEN:
+       Template-driven: <input [(ngModel)]="searchTerm">
+       Reactive:        <input formControlName="search">
+       → Reactive lebih testable, type-safe, dan powerful
+       ============================================================ -->
+  <section class="filters-section">
+    <form [formGroup]="filterForm" class="filter-form">
+
+      <!-- Search Input -->
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search wells</mat-label>
+        <!--
+          📘 formControlName="search"
+          Menghubungkan input ini ke filterForm.get('search')
+          Setiap keystroke → FormControl valueChanges observable emit
+          Di component, kita subscribe dengan debounceTime(300)
+        -->
+        <input matInput formControlName="search" placeholder="Well name, field...">
+        <!--
+          📘 matSuffix DIRECTIVE:
+          Menempatkan element di akhir (kanan) form field
+          matPrefix = di awal (kiri)
+        -->
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <!-- Status Multi-Select Filter -->
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <!--
+          📘 mat-select with multiple:
+          - formControlName="status" → FormControl<WellStatus[]>
+          - multiple → Allows selecting multiple options
+          - Value: array of selected values
+        -->
+        <mat-select formControlName="status" multiple>
+          <!--
+            📘 @for iterating enum values:
+            wellStatuses = Object.values(WellStatus)
+            Iterate over enum values untuk generate options
+          -->
+          @for (status of wellStatuses; track status) {
+            <mat-option [value]="status">{{ status | titlecase }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Type Multi-Select Filter -->
+      <mat-form-field appearance="outline">
+        <mat-label>Type</mat-label>
+        <mat-select formControlName="type" multiple>
+          @for (type of wellTypes; track type) {
+            <!--
+              📘 PIPE: | titlecase
+              'oil' → 'Oil', 'gas' → 'Gas'
+              Built-in pipe untuk capitalize first letter of each word
+            -->
+            <mat-option [value]="type">{{ type | titlecase }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Reset Button -->
+      <button mat-stroked-button (click)="resetFilters()" class="reset-btn">
+        <mat-icon>filter_alt_off</mat-icon>
+        Reset
+      </button>
+    </form>
+
+    <!--
+      📘 COMPUTED SIGNAL: hasActiveFilters()
+      computed() otomatis recalculate ketika searchTerm, statusFilter,
+      atau typeFilter signals berubah.
+      Template auto-update karena OnPush + signal dependency tracking.
+    -->
+    @if (hasActiveFilters()) {
+      <div class="active-filters">
+        <span class="filter-label">Active Filters:</span>
+        <!--
+          📘 mat-chip-set + mat-chip:
+          Material chips untuk display tags/labels
+        -->
+        <mat-chip-set>
+          @for (filter of activeFilterLabels(); track filter) {
+            <mat-chip>{{ filter }}</mat-chip>
+          }
+        </mat-chip-set>
+        <!--
+          📘 SIGNAL INTERPOLATION:
+          {{ filteredWells().length }}
+          - filteredWells() = computed signal
+          - .length = property access on the returned array
+        -->
+        <span class="result-count">{{ filteredWells().length }} results</span>
+      </div>
+    }
+  </section>
+
+  <!-- Loading Spinner (shared component) -->
+  <app-loading-spinner [show]="wellService.isLoading()" message="Loading wells..." />
+
+  <!-- ============================================================
+       WELLS GRID - Conditional Rendering
+       ============================================================
+
+       📘 NESTED @if:
+       Pertama check loading state, lalu check apakah ada data.
+       Ini pattern umum: loading → data/empty → content
+       ============================================================ -->
+  @if (!wellService.isLoading()) {
+    @if (filteredWells().length > 0) {
+      <section class="wells-grid">
+        @for (well of filteredWells(); track well.uid) {
+          <!--
+            📘 RELATIVE routerLink:
+            [routerLink]="[well.uid]"
+            Karena component ini ada di route /wells,
+            maka [well.uid] = relative → navigates ke /wells/well-001
+
+            Bandingkan dengan absolute:
+            [routerLink]="['/wells', well.uid]" → absolute path
+          -->
+          <mat-card class="well-card" [routerLink]="[well.uid]">
+            <!-- Status indicator bar (dynamic class via interpolation) -->
+            <div class="status-bar status-{{ well.status }}"></div>
+
+            <mat-card-content>
+              <div class="well-header">
+                <h3>{{ well.name }}</h3>
+                <span class="status-badge status-{{ well.status }}">
+                  {{ well.status }}
+                </span>
+              </div>
+
+              <div class="well-info">
+                <div class="info-item">
+                  <mat-icon>place</mat-icon>
+                  <span>{{ well.field }}</span>
+                </div>
+                <div class="info-item">
+                  <mat-icon>straighten</mat-icon>
+                  <span>{{ well.currentDepth | number:'1.0-0' }} {{ well.depthUnit }}</span>
+                </div>
+                <div class="info-item">
+                  <mat-icon>schedule</mat-icon>
+                  <span>{{ well.lastUpdated | timeAgo }}</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      </section>
+    } @else {
+      <!-- Empty state - no matching results -->
+      <div class="empty-state">
+        <mat-icon>search_off</mat-icon>
+        <h3>No wells found</h3>
+        <p>Try adjusting your filters</p>
+      </div>
+    }
+  }
+</div>
