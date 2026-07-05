@@ -1,0 +1,4 @@
+.well-status-card {
+  transition: border 0.3s;
+  &.active { border-left: 4px solid #4caf50; }
+}

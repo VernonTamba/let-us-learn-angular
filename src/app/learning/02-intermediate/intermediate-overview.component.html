@@ -1,0 +1,385 @@
+<div class="intermediate-container">
+  <h1>02 - Intermediate Angular</h1>
+  <p class="subtitle">RxJS Mastery, State Management, HTTP Patterns</p>
+
+  <mat-tab-group>
+    <!-- ============================================================
+         TAB 1: RXJS OPERATORS
+         ============================================================ -->
+    <mat-tab label="RxJS Operators">
+      <div class="tab-content">
+        <h2>Higher-Order Mapping Operators</h2>
+        <p class="intro">
+          Ini adalah operator yang paling penting dan paling sering ditanya di interview.
+          Mereka meng-handle "Observable of Observables" (inner subscriptions).
+        </p>
+
+        <!-- switchMap -->
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>switchMap</mat-card-title>
+            <mat-card-subtitle>Cancel previous, take latest only</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="operator-info">
+              <p><strong>Behavior:</strong> Ketika source emit, cancel inner observable sebelumnya dan subscribe ke yang baru.</p>
+              <p><strong>Use Case:</strong> Search autocomplete, route parameter changes, dropdown selection</p>
+              <p><strong>Analogy:</strong> Seperti remote TV - saat ganti channel, channel lama langsung berhenti.</p>
+            </div>
+
+          </mat-card-content>
+        </mat-card>
+
+        <!-- mergeMap -->
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>mergeMap (flatMap)</mat-card-title>
+            <mat-card-subtitle>Run all in parallel, don't cancel</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="operator-info">
+              <p><strong>Behavior:</strong> Subscribe ke semua inner observables secara parallel. Tidak ada yang di-cancel.</p>
+              <p><strong>Use Case:</strong> Parallel API calls, file uploads, actions yang independent</p>
+              <p><strong>Analogy:</strong> Seperti multithread - semua berjalan bersamaan.</p>
+              <p class="warning">⚠️ Hati-hati memory leak! Bisa subscribe tanpa batas.</p>
+            </div>
+
+          </mat-card-content>
+        </mat-card>
+
+        <!-- concatMap -->
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>concatMap</mat-card-title>
+            <mat-card-subtitle>Queue & execute one by one (sequential)</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="operator-info">
+              <p><strong>Behavior:</strong> Queue inner observables. Tunggu yang sebelumnya selesai baru mulai yang berikutnya.</p>
+              <p><strong>Use Case:</strong> Sequential API calls, ordered operations, dependent requests</p>
+              <p><strong>Analogy:</strong> Seperti antrian - satu per satu sesuai urutan.</p>
+            </div>
+
+          </mat-card-content>
+        </mat-card>
+
+        <!-- exhaustMap -->
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>exhaustMap</mat-card-title>
+            <mat-card-subtitle>Ignore new while current is running</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="operator-info">
+              <p><strong>Behavior:</strong> Ignore source emissions selama inner observable masih active.</p>
+              <p><strong>Use Case:</strong> Login button, form submit, prevent double-click</p>
+              <p><strong>Analogy:</strong> Seperti elevator - ignore button press saat elevator masih bergerak.</p>
+            </div>
+
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Quick Reference -->
+        <mat-card class="concept-card summary-card">
+          <mat-card-header>
+            <mat-card-title>📋 Quick Reference: When to Use Which?</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <table class="reference-table">
+              <thead>
+                <tr>
+                  <th>Operator</th>
+                  <th>Previous Inner</th>
+                  <th>New Emissions</th>
+                  <th>Use When</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>switchMap</strong></td>
+                  <td>❌ Cancelled</td>
+                  <td>✅ Subscribed</td>
+                  <td>Only latest matters (search, navigation)</td>
+                </tr>
+                <tr>
+                  <td><strong>mergeMap</strong></td>
+                  <td>✅ Continues</td>
+                  <td>✅ Subscribed</td>
+                  <td>All matter, order doesn't (parallel uploads)</td>
+                </tr>
+                <tr>
+                  <td><strong>concatMap</strong></td>
+                  <td>✅ Continues</td>
+                  <td>⏳ Queued</td>
+                  <td>All matter, order matters (sequential writes)</td>
+                </tr>
+                <tr>
+                  <td><strong>exhaustMap</strong></td>
+                  <td>✅ Continues</td>
+                  <td>❌ Ignored</td>
+                  <td>Ignore while busy (form submit, login)</td>
+                </tr>
+              </tbody>
+            </table>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- ============================================================
+         TAB 2: SUBJECT TYPES
+         ============================================================ -->
+    <mat-tab label="Subjects">
+      <div class="tab-content">
+        <h2>RxJS Subject Types</h2>
+
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>Subject</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p><strong>Behavior:</strong> Multicast observable. New subscribers only get future values.</p>
+            <p><strong>Use Case:</strong> Event bus, custom events</p>
+
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>BehaviorSubject</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p><strong>Behavior:</strong> Has initial value. New subscribers immediately get current value.</p>
+            <p><strong>Use Case:</strong> State management, current user, connection status</p>
+
+            <p class="tip">💡 Most common Subject type for Angular services (state management)</p>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>ReplaySubject</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p><strong>Behavior:</strong> Replays N last values to new subscribers.</p>
+            <p><strong>Use Case:</strong> Cache recent events, chat history</p>
+
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>AsyncSubject</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p><strong>Behavior:</strong> Only emits the LAST value, and only when completed.</p>
+            <p><strong>Use Case:</strong> HTTP request result (like Promise), computation result</p>
+
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- ============================================================
+         TAB 3: STATE MANAGEMENT
+         ============================================================ -->
+    <mat-tab label="State Management">
+      <div class="tab-content">
+        <h2>State Management Patterns</h2>
+
+        <!-- Service-based state -->
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>Pattern 1: Service with BehaviorSubject</mat-card-title>
+            <mat-card-subtitle>Simple, works for most apps</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Signal-based state -->
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>Pattern 2: Service with Signals</mat-card-title>
+            <mat-card-subtitle>🟢 NEW - Angular 16+ approach</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+
+          </mat-card-content>
+        </mat-card>
+
+        <!-- NgRx comparison -->
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>Pattern 3: NgRx Store</mat-card-title>
+            <mat-card-subtitle>Enterprise-scale state (Redux pattern)</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <p><strong>When to use NgRx:</strong></p>
+            <ul>
+              <li>Large team, complex state interactions</li>
+              <li>Need time-travel debugging</li>
+              <li>Strict unidirectional data flow requirement</li>
+              <li>Complex side effects</li>
+            </ul>
+            <p><strong>When NOT to use:</strong></p>
+            <ul>
+              <li>Small/medium apps (over-engineering)</li>
+              <li>Simple CRUD operations</li>
+              <li>When service-based state is sufficient</li>
+            </ul>
+
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Decision guide -->
+        <mat-card class="concept-card summary-card">
+          <mat-card-header>
+            <mat-card-title>📋 Decision Guide: Which Pattern?</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <table class="reference-table">
+              <thead>
+                <tr>
+                  <th>Criteria</th>
+                  <th>Service + BehaviorSubject</th>
+                  <th>Service + Signals</th>
+                  <th>NgRx</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Complexity</td>
+                  <td>Low</td>
+                  <td>Low</td>
+                  <td>High</td>
+                </tr>
+                <tr>
+                  <td>Boilerplate</td>
+                  <td>Minimal</td>
+                  <td>Minimal</td>
+                  <td>Significant</td>
+                </tr>
+                <tr>
+                  <td>Scalability</td>
+                  <td>Medium</td>
+                  <td>Medium-High</td>
+                  <td>High</td>
+                </tr>
+                <tr>
+                  <td>DevTools</td>
+                  <td>❌</td>
+                  <td>🔄 Coming</td>
+                  <td>✅ Excellent</td>
+                </tr>
+                <tr>
+                  <td>Team Size</td>
+                  <td>Small</td>
+                  <td>Small-Medium</td>
+                  <td>Large</td>
+                </tr>
+                <tr>
+                  <td>Best For</td>
+                  <td>Most apps</td>
+                  <td>New Angular apps</td>
+                  <td>Enterprise/complex</td>
+                </tr>
+              </tbody>
+            </table>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- ============================================================
+         TAB 4: HTTP PATTERNS
+         ============================================================ -->
+    <mat-tab label="HTTP Patterns">
+      <div class="tab-content">
+        <h2>HTTP Client Patterns & Best Practices</h2>
+
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>Caching with shareReplay</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>Polling Pattern (Real-time fallback)</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>Parallel Requests (forkJoin vs combineLatest)</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>Error Handling Patterns</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- ============================================================
+         TAB 5: RxJS RECIPES
+         ============================================================ -->
+    <mat-tab label="RxJS Recipes">
+      <div class="tab-content">
+        <h2>Common RxJS Recipes for Oil & Gas Apps</h2>
+
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>Debounced Search</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>Sensor Data Batching</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>Unsubscribe Patterns</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>Change Detection with scan()</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

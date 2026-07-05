@@ -1,0 +1,217 @@
+<div class="advanced-container">
+  <h1>03 - Advanced Angular</h1>
+  <p class="subtitle">Signals, Change Detection, Performance, New APIs</p>
+
+  <mat-tab-group>
+    <!-- ============================================================
+         TAB 1: SIGNALS DEEP DIVE
+         ============================================================ -->
+    <mat-tab label="Signals">
+      <div class="tab-content">
+        <h2>Angular Signals - New Reactivity System</h2>
+        <p class="intro">
+          Signals adalah primitive baru untuk reactive state management di Angular 16+.
+          Mereka lebih sederhana dari RxJS untuk synchronous state dan
+          memungkinkan fine-grained change detection.
+        </p>
+
+        <!-- signal() -->
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>signal() - Writable Signal</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="live-demo">
+              <h4>Live Demo:</h4>
+              <p>Counter: <strong>{{ counter() }}</strong></p>
+              <button mat-raised-button (click)="counter.set(counter() + 1)">
+                Increment
+              </button>
+              <button mat-raised-button (click)="counter.set(0)">
+                Reset
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- computed() -->
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>computed() - Derived/Computed Signal</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="live-demo">
+              <h4>Live Demo: Well Depth Calculator</h4>
+              <p>Depth (m): <strong>{{ depthMeters() }}</strong></p>
+              <p>Depth (ft): <strong>{{ depthFeet() | number:'1.1-1' }}</strong> (computed)</p>
+              <p>Is Deep Well: <strong>{{ isDeepWell() }}</strong> (computed)</p>
+              <button mat-raised-button (click)="depthMeters.set(depthMeters() + 100)">
+                Drill +100m
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- effect() -->
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>effect() - Side Effects</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="live-demo">
+              <h4>Live Demo: Effect logs to console</h4>
+              <p>Effect run count: <strong>{{ effectRunCount() }}</strong></p>
+              <p>Check browser console for effect output!</p>
+              <button mat-raised-button (click)="triggerEffect()">
+                Trigger Effect
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- ============================================================
+         TAB 2: CHANGE DETECTION
+         ============================================================ -->
+    <mat-tab label="Change Detection">
+      <div class="tab-content">
+        <h2>Change Detection Deep Dive</h2>
+
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>How Change Detection Works</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="cd-explanation">
+              <h4>What triggers Change Detection?</h4>
+              <ul>
+                <li>DOM events (click, input, submit, etc.)</li>
+                <li>HTTP responses</li>
+                <li>Timer/interval callbacks (setTimeout, setInterval)</li>
+                <li>Promise resolutions</li>
+                <li>Any async operation patched by Zone.js</li>
+              </ul>
+
+              <h4>What happens during CD?</h4>
+              <ol>
+                <li>Angular checks the component tree TOP-DOWN</li>
+                <li>For each component, compares current values with previous</li>
+                <li>If different → update the DOM</li>
+                <li>With Default strategy: checks ALL components</li>
+                <li>With OnPush: only checks if inputs change or events occur</li>
+              </ol>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+      </div>
+    </mat-tab>
+
+    <!-- ============================================================
+         TAB 3: DEFERRABLE VIEWS & PERFORMANCE
+         ============================================================ -->
+    <mat-tab label="@defer & Performance">
+      <div class="tab-content">
+        <h2>Deferrable Views & Performance Optimization</h2>
+
+
+
+        <mat-card class="concept-card">
+          <mat-card-header>
+            <mat-card-title>Performance Optimization Checklist</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="checklist">
+              <h4>🏎️ Bundle Size</h4>
+              <ul>
+                <li>✅ Lazy load routes (loadComponent / loadChildren)</li>
+                <li>✅ Use &#64;defer for heavy below-fold components</li>
+                <li>✅ Tree-shake unused code (standalone components help)</li>
+                <li>✅ Analyze bundle: <code>ng build --stats-json</code></li>
+                <li>✅ Set budgets in angular.json</li>
+              </ul>
+
+              <h4>🎯 Runtime Performance</h4>
+              <ul>
+                <li>✅ Use OnPush change detection EVERYWHERE</li>
+                <li>✅ Use <code>track</code> in &#64;for loops</li>
+                <li>✅ Use Signals instead of getters/methods in templates</li>
+                <li>✅ Use pure pipes instead of methods in templates</li>
+                <li>✅ Virtual scrolling for large lists (CDK)</li>
+                <li>✅ Debounce rapid events (input, scroll, resize)</li>
+                <li>✅ Unsubscribe from observables (prevent memory leaks)</li>
+              </ul>
+
+              <h4>🖼️ Rendering</h4>
+              <ul>
+                <li>✅ Use CSS containment (<code>contain: content</code>)</li>
+                <li>✅ Minimize DOM depth</li>
+                <li>✅ Use <code>&#64;if</code> to remove hidden elements vs <code>[hidden]</code></li>
+                <li>✅ Image lazy loading: <code>&lt;img loading="lazy"&gt;</code></li>
+                <li>✅ Preconnect to API domains</li>
+              </ul>
+
+              <h4>📡 Network</h4>
+              <ul>
+                <li>✅ HTTP caching with shareReplay</li>
+                <li>✅ Pagination instead of loading all data</li>
+                <li>✅ WebSocket for real-time (avoid polling)</li>
+                <li>✅ Compress API responses (gzip/brotli)</li>
+                <li>✅ Service Worker for offline/caching</li>
+              </ul>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+      </div>
+    </mat-tab>
+
+    <!-- ============================================================
+         TAB 4: NEW ANGULAR APIs
+         ============================================================ -->
+    <mat-tab label="New APIs">
+      <div class="tab-content">
+        <h2>New Angular APIs (v16-18)</h2>
+
+
+
+        <!-- Angular Evolution Summary -->
+        <mat-card class="concept-card summary-card">
+          <mat-card-header>
+            <mat-card-title>📋 Angular Evolution Summary</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <table class="reference-table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Introduced</th>
+                  <th>Replaces</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Standalone Components</td><td>v14</td><td>NgModules</td></tr>
+                <tr><td>inject() function</td><td>v14</td><td>Constructor DI</td></tr>
+                <tr><td>Typed Forms</td><td>v14</td><td>Untyped FormGroup</td></tr>
+                <tr><td>Functional Guards</td><td>v15</td><td>Class-based Guards</td></tr>
+                <tr><td>Functional Interceptors</td><td>v15</td><td>Class-based Interceptors</td></tr>
+                <tr><td>Signals</td><td>v16</td><td>BehaviorSubject (for sync state)</td></tr>
+                <tr><td>takeUntilDestroyed</td><td>v16</td><td>takeUntil + Subject pattern</td></tr>
+                <tr><td>input() / output()</td><td>v17</td><td>&#64;Input() / &#64;Output()</td></tr>
+                <tr><td>&#64;if / &#64;for / &#64;switch</td><td>v17</td><td>*ngIf / *ngFor / ngSwitch</td></tr>
+                <tr><td>&#64;defer</td><td>v17</td><td>Manual lazy loading</td></tr>
+                <tr><td>viewChild() signal</td><td>v17</td><td>&#64;ViewChild decorator</td></tr>
+                <tr><td>viewChildren() signal</td><td>v17</td><td>&#64;ViewChildren decorator</td></tr>
+                <tr><td>contentChild() signal</td><td>v17</td><td>&#64;ContentChild decorator</td></tr>
+                <tr><td>contentChildren() signal</td><td>v17</td><td>&#64;ContentChildren decorator</td></tr>
+                <tr><td>model() two-way</td><td>v17</td><td>&#64;Input + &#64;Output combo</td></tr>
+                <tr><td>Zoneless (experimental)</td><td>v18</td><td>Zone.js</td></tr>
+              </tbody>
+            </table>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

@@ -1,2 +1,23 @@
+# Dependencies
 /node_modules
+
+# Compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
+
+# IDEs and Editors
 /.vscode
+/.idea
+/.project
+/.classpath
+/.cproject
+/.settings
+
+# Angular Cache
+/.angular
+
+# OS files
+.DS_Store
+Thumbs.db
