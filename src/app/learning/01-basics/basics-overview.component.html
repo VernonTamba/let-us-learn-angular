@@ -97,19 +97,28 @@
         <!-- @if vs *ngIf -->
         <mat-card class="concept-card">
           <mat-card-header>
-            <mat-card-title>Conditional Rendering</mat-card-title>
+            <mat-card-title>Conditional Rendering (&#64;if vs *ngIf)</mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <div class="live-demo">
-              <h4>Live Demo:</h4>
-              <button mat-button (click)="toggleConnection()">
-                Toggle Connection
-              </button>
-              @if (isConnected()) {
-                <span class="status-connected">🟢 Connected</span>
-              } @else {
-                <span class="status-offline">🔴 Offline</span>
-              }
+            <button mat-raised-button color="primary" (click)="toggleConnection()" style="margin-bottom: 12px;">
+              Toggle Connection
+            </button>
+            <div class="comparison">
+              <div class="new-way">
+                <h4>🟢 New Way (&#64;if / &#64;else):</h4>
+                @if (isConnected()) {
+                  <span class="status-connected">🟢 Connected</span>
+                } @else {
+                  <span class="status-offline">🔴 Offline</span>
+                }
+              </div>
+              <div class="old-way">
+                <h4>🔴 Old Way (*ngIf):</h4>
+                <span *ngIf="isConnected(); else offlineTemp" class="status-connected">🟢 Connected</span>
+                <ng-template #offlineTemp>
+                  <span class="status-offline">🔴 Offline</span>
+                </ng-template>
+              </div>
             </div>
           </mat-card-content>
         </mat-card>
@@ -117,22 +126,35 @@
         <!-- @for vs *ngFor -->
         <mat-card class="concept-card">
           <mat-card-header>
-            <mat-card-title>List Rendering</mat-card-title>
+            <mat-card-title>List Rendering (&#64;for vs *ngFor)</mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <div class="live-demo">
-              <h4>Live Demo:</h4>
-              @for (well of demoWells(); track well.uid; let i = $index) {
-                <div class="list-item">
+            <div style="margin-bottom: 12px;">
+              <button mat-raised-button color="primary" (click)="addDemoWell()" style="margin-right: 8px;">+ Add Well</button>
+              <button mat-raised-button color="warn" (click)="clearDemoWells()">Clear All</button>
+            </div>
+            <div class="comparison">
+              <div class="new-way">
+                <h4>🟢 New Way (&#64;for):</h4>
+                @for (well of demoWells(); track well.uid; let i = $index) {
+                  <div class="list-item">
+                    <span>#{{ i + 1 }}</span>
+                    <strong>{{ well.name }}</strong>
+                    <span class="badge">{{ well.status }}</span>
+                  </div>
+                } @empty {
+                  <p>No wells to display</p>
+                }
+              </div>
+              <div class="old-way">
+                <h4>🔴 Old Way (*ngFor):</h4>
+                <div *ngFor="let well of demoWells(); let i = index; trackBy: trackByWellId" class="list-item">
                   <span>#{{ i + 1 }}</span>
                   <strong>{{ well.name }}</strong>
                   <span class="badge">{{ well.status }}</span>
                 </div>
-              } @empty {
-                <p>No wells to display</p>
-              }
-              <button mat-button (click)="addDemoWell()">+ Add Well</button>
-              <button mat-button (click)="clearDemoWells()">Clear All</button>
+                <p *ngIf="demoWells().length === 0">No wells to display</p>
+              </div>
             </div>
           </mat-card-content>
         </mat-card>
@@ -140,24 +162,39 @@
         <!-- @switch vs [ngSwitch] -->
         <mat-card class="concept-card">
           <mat-card-header>
-            <mat-card-title>Switch/Case</mat-card-title>
+            <mat-card-title>Switch/Case (&#64;switch vs [ngSwitch])</mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <div class="live-demo">
-              <h4>Live Demo:</h4>
-              <select [(ngModel)]="currentStatus" style="padding:4px">
+            <div style="margin-bottom: 12px;">
+              <label for="status-select" style="margin-right: 8px;">Select Status:</label>
+              <select id="status-select" [(ngModel)]="currentStatus" style="padding: 6px 12px; border-radius: 4px; border: 1px solid #ccc;">
                 <option value="drilling">Drilling</option>
                 <option value="producing">Producing</option>
                 <option value="suspended">Suspended</option>
                 <option value="abandoned">Abandoned</option>
               </select>
-              @switch (currentStatus) {
-                @case ('drilling') { <span class="status-badge drilling">⛏️ Actively Drilling</span> }
-                @case ('producing') { <span class="status-badge producing">💧 Producing Oil/Gas</span> }
-                @case ('suspended') { <span class="status-badge suspended">⏸️ Temporarily Suspended</span> }
-                @case ('abandoned') { <span class="status-badge abandoned">❌ Abandoned</span> }
-                @default { <span>Unknown Status</span> }
-              }
+            </div>
+            <div class="comparison">
+              <div class="new-way">
+                <h4>🟢 New Way (&#64;switch):</h4>
+                @switch (currentStatus) {
+                  @case ('drilling') { <span class="status-badge drilling">⛏️ Actively Drilling</span> }
+                  @case ('producing') { <span class="status-badge producing">💧 Producing Oil/Gas</span> }
+                  @case ('suspended') { <span class="status-badge suspended">⏸️ Temporarily Suspended</span> }
+                  @case ('abandoned') { <span class="status-badge abandoned">❌ Abandoned</span> }
+                  @default { <span>Unknown Status</span> }
+                }
+              </div>
+              <div class="old-way">
+                <h4>🔴 Old Way ([ngSwitch]):</h4>
+                <div [ngSwitch]="currentStatus">
+                  <span *ngSwitchCase="'drilling'" class="status-badge drilling">⛏️ Actively Drilling</span>
+                  <span *ngSwitchCase="'producing'" class="status-badge producing">💧 Producing Oil/Gas</span>
+                  <span *ngSwitchCase="'suspended'" class="status-badge suspended">⏸️ Temporarily Suspended</span>
+                  <span *ngSwitchCase="'abandoned'" class="status-badge abandoned">❌ Abandoned</span>
+                  <span *ngSwitchDefault>Unknown Status</span>
+                </div>
+              </div>
             </div>
           </mat-card-content>
         </mat-card>

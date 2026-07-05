@@ -182,4 +182,8 @@ export class BasicsOverviewComponent implements OnInit, OnDestroy {
   onWellSelected(name: string): void {
     this.selectedWellName.set(name);
   }
+
+  trackByWellId(index: number, well: any): string {
+    return well.uid;
+  }
 }
